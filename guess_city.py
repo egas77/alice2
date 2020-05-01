@@ -48,7 +48,7 @@ def make_response(json):
         response['response']['card'] = cites[sessions[session_id]['current_count_city']]['card']
         if city_ok:
             response['response']['card']['title'] = 'Совершенно верно! А что это за город?'
-        else:
+        elif not city_ok and not json['session']['new']:
             response['response']['card']['title'] = 'Попробуй еще разок!'
     except IndexError:
         response['response']['end_session'] = True
