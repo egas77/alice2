@@ -1,5 +1,5 @@
 from flask import Flask, request
-from flask_ngrok import run_with_ngrok
+import os
 
 TOKEN = 'cabb4c5b-70a8-4826-8857-4e12fc11fe7b'
 HELP = '''Игра "Угадай город"
@@ -135,6 +135,6 @@ sessions = {
 
 }
 
-app.config['DEBUG'] = True
-run_with_ngrok(app)
-app.run()
+if __name__ == '__main__':
+    port = os.environ.get('PORT', 5000)
+    app.run(host='0.0.0.0', port=port)
