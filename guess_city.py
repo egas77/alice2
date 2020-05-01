@@ -50,6 +50,8 @@ def make_response(json):
             response['response']['card']['title'] = 'Совершенно верно! А что это за город?'
         elif not city_ok and not json['session']['new']:
             response['response']['card']['title'] = 'Попробуй еще разок!'
+        else:
+            response['response']['card']['title'] = 'Что это за город?'
     except IndexError:
         response['response']['end_session'] = True
         response['response']['text'] = 'Игра окончена'
