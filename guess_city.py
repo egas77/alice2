@@ -1,5 +1,7 @@
 from flask import Flask, request
 import os
+from random import shuffle
+from flask_ngrok import run_with_ngrok
 
 TOKEN = 'cabb4c5b-70a8-4826-8857-4e12fc11fe7b'
 HELP = '''Игра "Угадай город"
@@ -16,16 +18,6 @@ def main():
 
 def make_response(json):
     session_id = json['session']['session_id']
-    if json['request']['original_utterance'].lower() == 'помощь':
-        response = {
-            "response": {
-                "text": HELP,
-                "end_session": False,
-            },
-            'version': json['version']
-        }
-        add_buttons(response)
-        return response
     response = {
         "response": {
             "text": "Угадай город",
@@ -33,42 +25,67 @@ def make_response(json):
         },
         'version': json['version']
     }
+    add_buttons(response)
+    if json['request']['type'] == 'ButtonPressed':
+        if 'payload' in json['request']:
+            if 'city' in json['request']['payload']:
+                response['response'][
+                    'text'] = f"А вот и {json['request']['payload']['city'].capitalize()}"
+                return response
+    if json['request']['original_utterance'].lower() == 'помощь':
+        response['response']['text'] = HELP
+        return response
     if json['session']['new']:
-        sessions[session_id] = {
-            'current_count_city': 0
-        }
+        init_cites_for_user(session_id)
     cites_names = get_cites(json)
-    city_ok = False
+    city = None
     if cites_names:
-        current_city_name = cites[sessions[session_id]['current_count_city']]['name']
+        current_city_name = cites[sessions[session_id]['cites'][0]]['name']
         if current_city_name in cites_names:
-            sessions[session_id]['current_count_city'] += 1
-            city_ok = True
-    try:
-        response['response']['card'] = cites[sessions[session_id]['current_count_city']]['card']
-        if city_ok:
+            city_index = sessions[session_id]['cites'][0]
+            city = cites[city_index]['name']
+            del sessions[session_id]['cites'][0]
+    if sessions[session_id]['cites']:
+        response['response']['card'] = cites[sessions[session_id]['cites'][0]]['card']
+        if city:
             response['response']['card']['title'] = 'Совершенно верно! А что это за город?'
-        elif not city_ok and not json['session']['new']:
+        elif not city and not json['session']['new']:
             response['response']['card']['title'] = 'Попробуй еще разок!'
         else:
             response['response']['card']['title'] = 'Что это за город?'
-    except IndexError:
+    else:
         response['response']['end_session'] = True
         response['response']['text'] = 'Игра окончена'
-        sessions[session_id] = {
-            'current_count_city': 0
-        }
-    add_buttons(response)
+        init_cites_for_user(session_id)
+    add_buttons(response, city)
     return response
 
 
-def add_buttons(json):
+def init_cites_for_user(session_id):
+    cites_current_user = list(range(len(cites)))
+    shuffle(cites_current_user)
+    sessions[session_id] = {
+        'cites': cites_current_user
+    }
+
+
+def add_buttons(json, city=None):
     json['response']['buttons'] = [
         {
             "title": "Помощь",
             "hide": True,
         }
     ]
+    if city:
+        json['response']['buttons'].append({
+            'title': city.capitalize(),
+            'hide': True,
+            'url': f'https://yandex.ru/maps/?mode=search&text={city}',
+            'payload': {
+                'answer': False,
+                'city': city
+            }
+        })
 
 
 def get_cites(json):
@@ -139,4 +156,6 @@ sessions = {
 
 if __name__ == '__main__':
     port = os.environ.get('PORT', 5000)
-    app.run(host='0.0.0.0', port=port)
+    app.config['DEBUG'] = True
+    run_with_ngrok(app)
+    app.run()
