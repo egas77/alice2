@@ -1,1 +1,1 @@
-web: python guess_city.py
+web: python alice_and_maps.py
