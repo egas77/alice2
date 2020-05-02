@@ -1,1 +1,1 @@
-web: python alice_and_maps.py
+web: python translate.py
