@@ -4,7 +4,6 @@ import json
 import os
 # импортируем функции из нашего второго файла geo
 from geo import get_distance, get_geo_info
-from flask_ngrok import run_with_ngrok
 
 app = Flask(__name__)
 
@@ -63,6 +62,4 @@ def get_cities(req):
 
 if __name__ == '__main__':
     port = os.environ.get('PORT', 5000)
-    run_with_ngrok(app)
-    app.run()
-    # app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port)
