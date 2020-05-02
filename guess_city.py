@@ -1,7 +1,6 @@
 from flask import Flask, request
 import os
 from random import shuffle
-from flask_ngrok import run_with_ngrok
 
 TOKEN = 'cabb4c5b-70a8-4826-8857-4e12fc11fe7b'
 HELP = '''Игра "Угадай город"
@@ -156,6 +155,4 @@ sessions = {
 
 if __name__ == '__main__':
     port = os.environ.get('PORT', 5000)
-    app.config['DEBUG'] = True
-    run_with_ngrok(app)
-    app.run()
+    app.run(host='0.0.0.0', port=port)
