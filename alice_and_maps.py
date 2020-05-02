@@ -3,7 +3,8 @@ import logging
 import json
 import os
 # импортируем функции из нашего второго файла geo
-from geo import get_country, get_distance, get_coordinates
+from geo import get_distance, get_geo_info
+from flask_ngrok import run_with_ngrok
 
 app = Flask(__name__)
 
@@ -41,10 +42,10 @@ def handle_dialog(res, req):
         res['response']['text'] = 'Ты не написал название не одного города!'
     elif len(cities) == 1:
         res['response']['text'] = 'Этот город в стране - ' + \
-                                  get_country(cities[0])
+                                  get_geo_info(cities[0], type_info='country')
     elif len(cities) == 2:
-        distance = get_distance(get_coordinates(
-            cities[0]), get_coordinates(cities[1]))
+        distance = get_distance(get_geo_info(
+            cities[0], type_info='coordinates'), get_geo_info(cities[1], type_info='coordinates'))
         res['response']['text'] = 'Расстояние между этими городами: ' + \
                                   str(round(distance)) + ' км.'
     else:
@@ -62,4 +63,6 @@ def get_cities(req):
 
 if __name__ == '__main__':
     port = os.environ.get('PORT', 5000)
-    app.run(host='0.0.0.0', port=port)
+    run_with_ngrok(app)
+    app.run()
+    # app.run(host='0.0.0.0', port=port)
